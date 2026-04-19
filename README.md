@@ -163,6 +163,8 @@ The filtered count matrix contains:
 - `genes.tsv` — gene names/IDs
 - `matrix.mtx` — count matrix
 <img width="495" height="446" alt="droplet plot" src="https://github.com/user-attachments/assets/9f4d810e-6fae-45ea-9b44-a2d4c0b61c06" />
+
+
 <img width="566" height="492" alt="droplet plot2" src="https://github.com/user-attachments/assets/652ffb8f-bf2c-475c-a18a-31fcdafb16ef" />
 
 ---
