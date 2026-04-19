@@ -1,0 +1,256 @@
+# Advanced scRNA-seq Analysis Tutorial
+
+**Author:** Aqba Ejaz
+
+---
+
+## Overview
+
+This tutorial covers three advanced topics in single-cell RNA-seq analysis:
+
+1. **Complete scRNA-seq Workflow** — From raw counts to cell type identification
+2. **Gene-Level Analysis** — Functional enrichment and genomic ranges
+3. **Gene Set Enrichment Analysis (GSEA)** — Rank-based pathway analysis
+
+---
+
+## Part 1: Complete scRNA-seq Workflow
+
+### 1.1 Setup and Data Loading
+
+**Steps:**
+- Import necessary libraries (`scanpy`, `anndata`, `pooch`)
+- Set consistent figure style
+- Download sample dataset (two 10x Genomics samples: `s1d1` and `s1d3`)
+- Load as `AnnData` objects and merge
+
+---
+
+### 1.2 Quality Control (QC)
+
+**Gene identification patterns:**
+
+| Pattern | Meaning |
+|---------|---------|
+| `MT-` | Mitochondrial genes |
+| `RPS`, `RPL` | Ribosomal genes |
+| `^HB[^(P)]` | Hemoglobin genes |
+
+**Quality metrics calculated:**
+- Number of genes per cell
+- Total counts per cell
+- Percentage of mitochondrial counts
+
+**Visualization:**
+- Violin plots for metric distributions
+- Scatter plots (total counts vs. genes, colored by mitochondrial %)
+
+**Filtering:**
+- Remove cells with very few genes
+- Remove genes found in very few cells
+
+---
+
+### 1.3 Normalization and Feature Selection
+
+| Step | Method | Outcome |
+|------|--------|---------|
+| Normalization | Median total counts + log-transform | Comparable counts |
+| Feature selection | Identify top 2,000 highly variable genes | Genes that distinguish cell types |
+
+---
+
+### 1.4 Dimensionality Reduction and Clustering
+
+| Method | Purpose |
+|--------|---------|
+| PCA | Linear transformation to reduce complexity |
+| UMAP | 2D projection for visualization |
+| Leiden | Graph-based clustering |
+
+**Clustering resolutions to explore:**
+- 0.02 — fewer, broader clusters
+- 0.5 — balanced clustering
+- 2 — more, finer clusters
+
+---
+
+### 1.5 Doublet Detection and Removal
+
+**Tool:** `scrublet`
+
+**Process:**
+1. Predict doublets based on gene expression profiles
+2. Identify cells with high doublet scores
+3. Remove predicted doublets
+4. Replot UMAP to visualize cleaned data
+
+---
+
+### 1.6 Cell Type Annotation
+
+**Immune cell marker genes:**
+
+| Cell Type | Marker Genes |
+|-----------|---------------|
+| CD14+ Monocytes | CD14, LYZ |
+| NK cells | GNLY, NKG7 |
+| CD4+ T cells | CD4, IL7R |
+| CD8+ T cells | CD8A, CD8B |
+| B cells | CD79A, MS4A1 |
+
+**Methods:**
+- Dot plots for marker gene expression across clusters
+- Manual annotation based on marker patterns
+- `celltypist` for automated annotation
+
+---
+
+## Part 2: Gene-Level Analysis
+
+### 2.1 Introduction to Gene Ontology (GO)
+
+**Gene Ontology categories:**
+
+| Category | Description |
+|----------|-------------|
+| Biological Process (BP) | Biological objectives (e.g., cell cycle) |
+| Molecular Function (MF) | Molecular activities (e.g., kinase activity) |
+| Cellular Component (CC) | Locations (e.g., nucleus, membrane) |
+
+**Database used:** `org.Hs.eg.db` (human gene annotations)
+
+---
+
+### 2.2 Differential Expression and Gene List Creation
+
+**Input gene list examples:**
+- "SYNGAP1 interactors"
+- Genes from a specific study
+
+**Background sets:**
+- All genes detected in transcriptome
+- All known protein-coding genes (gene universe)
+
+---
+
+### 2.3 Performing Enrichment Analysis
+
+**Tool:** `clusterProfiler`
+
+**Method:** Over-representation test
+
+**Output:** Functional categories (GO terms or KEGG pathways) significantly over-represented in the input gene list.
+
+---
+
+### 2.4 Visualizing Enrichment Results
+
+| Plot Type | Purpose |
+|-----------|---------|
+| Bar plot | Most significantly enriched terms |
+| Dot plot | Enrichment statistics (GeneRatio, p-value) |
+| Network plot (enrichment map) | Relationships between terms |
+| Category-gene-network | Which genes drive enrichment |
+| Heatmap | Comparison across multiple gene lists |
+
+---
+
+### 2.5 Genomic Ranges Analysis
+
+**Tools:** `GenomicRanges` package
+
+**Input data:**
+- Mouse recombination hotspots
+- PRDM9 binding sites
+
+**Analysis:** Find overlaps between two sets of genomic ranges
+
+**Output:** Identify which PRDM9 binding sites fall within recombination hotspots
+
+**Visualization:** Plot the overlap
+
+---
+
+## Part 3: Gene Set Enrichment Analysis (GSEA)
+
+### 3.1 What is GSEA?
+
+**Key difference from over-representation tests:**
+
+| Method | Input | Approach |
+|--------|-------|----------|
+| Over-representation | Gene list (cutoff-based) | Counts genes in sets |
+| GSEA | Ranked list of ALL genes | Considers gene order |
+
+**Advantage of GSEA:** Doesn't require arbitrary cutoffs for significance.
+
+---
+
+### 3.2 Setup and Data Preparation
+
+**Input data:** Pre-calculated differential expression table with log2 fold-change for all genes
+
+**Ranked list creation:**
+1. Sort genes from most upregulated to most downregulated
+2. Convert gene symbols to Entrez IDs
+
+---
+
+### 3.3 Performing GSEA
+
+**Tool:** `clusterProfiler::GSEA()`
+
+**Gene set database:** Molecular Signatures Database (MSigDB)
+
+**Output metric:** Normalized Enrichment Score (NES)
+
+| NES Value | Interpretation |
+|-----------|----------------|
+| Positive > 0 | Genes enriched at top (upregulated) |
+| Negative < 0 | Genes enriched at bottom (downregulated) |
+| |NES| > 1 | Significant enrichment |
+
+---
+
+### 3.4 Interpreting GSEA Results
+
+**Visualizations:**
+
+| Plot | Shows |
+|------|-------|
+| Dot plot | Most significant pathways with NES |
+| Classic GSEA plot | Running enrichment score with peak at enrichment |
+| Heatmap | Comparison across multiple ranked lists |
+
+**Example pathway:** "Epithelial Mesenchymal Transition" (EMT)
+
+**What a sharp peak indicates:** Pathway genes are highly enriched at the top of the ranked list (upregulated).
+
+---
+
+## Summary of Methods
+
+| Analysis | Purpose | Key Tools |
+|----------|---------|-----------|
+| QC & Filtering | Remove low-quality cells/genes | scanpy, scrublet |
+| Normalization | Make counts comparable | Log-normalization, CPM |
+| Dimensionality reduction | Visualize high-dim data | PCA, UMAP, t-SNE |
+| Clustering | Identify cell groups | Leiden |
+| Annotation | Assign cell types | Marker genes, celltypist |
+| Enrichment | Find functional themes | clusterProfiler |
+| Genomic ranges | Find spatial overlaps | GenomicRanges |
+| GSEA | Rank-based pathway analysis | clusterProfiler::GSEA |
+
+---
+
+## Next Steps
+
+After completing this tutorial, you can:
+- Apply these methods to your own scRNA-seq data
+- Integrate multiple datasets
+- Perform trajectory inference
+- Identify rare cell populations
+- Publish reproducible analyses
+
+---
